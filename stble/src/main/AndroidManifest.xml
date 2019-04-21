@@ -1,2 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.liugs.stble" />
+    package="com.liugs.stble" >
+
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+</manifest>
