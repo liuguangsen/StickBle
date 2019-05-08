@@ -28,7 +28,7 @@ public class BleScanManager {
         return ScanHolder.instance;
     }
 
-    public void startScan(IScanResultCallback callback){
+    public void startScan(IScanResultCallback callback,BleScanConfig config){
         if (callback == null){
             return;
         }
@@ -40,6 +40,7 @@ public class BleScanManager {
             }
         }
         bluetoothLeScanner.startScan(sysScanCallback);
+        sysScanCallback.start(config);
     }
 
     public void stopScan(){
@@ -67,6 +68,12 @@ public class BleScanManager {
             if (iScanResultCallback != null){
                 iScanResultCallback.onScanError();
             }
+        }
+
+        @Override
+        public void onScanFinished() {
+            callback.clear();
+            bluetoothLeScanner.stopScan(sysScanCallback);
         }
     };
 }
