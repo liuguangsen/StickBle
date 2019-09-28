@@ -13,12 +13,13 @@ import java.util.List;
  * Created by liuguangsen on 2019/4/21.
  */
 
-public abstract class ParserScanResult extends ScanCallback {
+public class ParserScanResult<Result> extends BaseParser<Result> {
 
     private boolean isHandling;
     private HandlerThread handlerThread;
     private Handler handler;
     private Handler mainHandler = new Handler();
+    private ScanLocal scanLocal;
 
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
@@ -35,7 +36,8 @@ public abstract class ParserScanResult extends ScanCallback {
         super.onScanFailed(errorCode);
     }
 
-    public void start(BleScanConfig config) {
+    public void start(ScanLocal<Result> local) {
+        BleScanConfig config = local.getConfig();
         isHandling = true;
         handlerThread = new HandlerThread("ParserScanResult");
         handlerThread.start();
@@ -53,7 +55,7 @@ public abstract class ParserScanResult extends ScanCallback {
         isHandling = false;
         handlerThread.quitSafely();
         handlerThread = null;
-        handler.removeMessages(MSG_PARSER_RESULT);
+        handler.removeCallbacksAndMessages(null);
         handler = null;
     }
 
@@ -61,11 +63,9 @@ public abstract class ParserScanResult extends ScanCallback {
         return isHandling;
     }
 
-    public abstract void onScanResult();
+    public void onScanFinished(){
 
-    public abstract void onScanError();
-
-    public abstract void onScanFinished();
+    }
 
     private static final int MSG_PARSER_RESULT = 1001;
 

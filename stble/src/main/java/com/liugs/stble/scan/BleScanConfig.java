@@ -15,11 +15,15 @@ public class BleScanConfig {
         return time;
     }
 
-    class Builder{
-        private BleScanConfig config;
+   public static class Builder{
+        private final BleScanConfig config;
         private int time;
 
-        public Builder setTime(int time) {
+       public Builder() {
+           this.config = new BleScanConfig();
+       }
+
+       public Builder setTime(int time) {
             this.time = time;
             this.config.setTime(time);
             return this;
