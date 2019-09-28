@@ -36,17 +36,15 @@ public class BleScanManager {
             synchronized (mLock) {
                 if (bluetoothLeScanner == null)
                     bluetoothLeScanner = BleManager.getInstance().getBluetoothAdapter().getBluetoothLeScanner();
-                resultBaseParser = ParserResultFactory.buildParser(scanLocal);
-                sysScanCallback = resultBaseParser;
             }
         }
+        resultBaseParser = ParserResultFactory.buildParser(scanLocal);
+        sysScanCallback = resultBaseParser;
         // TODO 配置扫描参数
-        if (resultBaseParser != null) {
-            Log.i("MainActivity","startScan");
-            bluetoothLeScanner.startScan(resultBaseParser);
-            // TODO 配置扫描时间的参数
-            resultBaseParser.start(scanLocal);
-        }
+        Log.i("MainActivity","startScan");
+        bluetoothLeScanner.startScan(resultBaseParser);
+        // TODO 配置扫描时间的参数
+        resultBaseParser.start(scanLocal);
     }
 
     public void stopScan() {
