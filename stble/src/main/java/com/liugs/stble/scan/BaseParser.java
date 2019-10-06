@@ -8,10 +8,10 @@ import android.bluetooth.le.ScanCallback;
  * start,stop
  */
 public class BaseParser<Result> extends ScanCallback {
+    protected ScanLocal<Result> scanLocal;
     private boolean isHandling;
-    private boolean isHasCanceled;
 
-    protected void start(ScanLocal<Result> scanLocal){
+    protected void start(){
         isHandling = true;
     }
 
@@ -19,15 +19,11 @@ public class BaseParser<Result> extends ScanCallback {
         isHandling = false;
     }
 
+    public void setScanLocal(ScanLocal<Result> scanLocal) {
+        this.scanLocal = scanLocal;
+    }
+
     boolean isHandling() {
         return isHandling;
-    }
-
-    void cancel(){
-        isHasCanceled = true;
-    }
-
-    boolean isHasCanceled() {
-        return isHasCanceled;
     }
 }

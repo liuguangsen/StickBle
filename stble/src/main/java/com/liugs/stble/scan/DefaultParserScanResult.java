@@ -4,6 +4,8 @@ import android.bluetooth.le.ScanResult;
 import android.os.Handler;
 import android.util.Log;
 
+import com.liugs.stble.exception.ParamException;
+
 import java.util.List;
 
 /**
@@ -12,8 +14,7 @@ import java.util.List;
  */
 public class DefaultParserScanResult<Result> extends BaseParser<Result> {
     private Handler mainHandler = new Handler();
-    private DefaultCallback callback;
-    private ScanLocal<Result> scanLocal;
+    private BleScanCallback<Result> callback;
 
     public DefaultParserScanResult() {
     }
@@ -21,13 +22,18 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
-        Log.i("MainActivity","onScanResult");
-        if (result != null && callback != null) {
+        Log.i("MainActivity", "onScanResult");
+        if (result != null && callback != null && isHandling()) {
             Result parser = scanLocal.parser(result);
             if (parser != null) {
-                callback.onScanResult(result);
+                callback.onScanResult(parser);
             } else {
-                callback.onScanResult(result);
+                Class<Result> clz = scanLocal.getClz();
+                if (clz != null) {
+                    callback.onScanResult(clz.cast(result));
+                } else {
+                    throw new ParamException("ScanLocal 泛型参数 错误");
+                }
             }
         }
     }
@@ -42,12 +48,11 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
         super.onScanFailed(errorCode);
     }
 
-    public void start(ScanLocal<Result> local) {
-        super.start(local);
-        Log.i("MainActivity","start");
-        scanLocal = local;
-        callback = (DefaultCallback) local.getCallback();
-        BleScanConfig config = local.getConfig();
+    public void start() {
+        super.start();
+        Log.i("MainActivity", "start");
+        callback = (BleScanCallback<Result>) scanLocal.getCallback();
+        BleScanConfig config = scanLocal.getConfig();
         mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -57,13 +62,13 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
                 stop();
 
             }
-        }, config.getTime());
+        }, config == null ? BleScanConfig.DEFAULT_SCAN_TOME : config.getTime());
     }
 
     public void stop() {
         super.stop();
         release();
-        Log.i("MainActivity","stop");
+        Log.i("MainActivity", "stop");
     }
 
     private void release() {
@@ -72,7 +77,7 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
     }
 
     private void onScanFinished() {
-        if (!isHasCanceled() && callback != null) {
+        if (!isHandling() && callback != null) {
             callback.onFinished();
         }
     }

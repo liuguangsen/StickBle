@@ -19,7 +19,6 @@ public class ParserScanResult<Result> extends BaseParser<Result> {
     private HandlerThread handlerThread;
     private Handler handler;
     private Handler mainHandler = new Handler();
-    private ScanLocal scanLocal;
 
     @Override
     public void onScanResult(int callbackType, ScanResult result) {

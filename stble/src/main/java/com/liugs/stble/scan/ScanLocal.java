@@ -5,31 +5,43 @@ import android.bluetooth.le.ScanResult;
 /**
  * 默认数据解析,以及数据上报
  *
- * @param <R> 解析实体类
+ * @param <Result> 解析实体类
  */
-public class ScanLocal<R> {
+public class ScanLocal<Result> {
 
     private BleScanConfig config;
 
-    private BaseCallback<R> callback;
+    private Class<Result> clz;
+
+    private BaseCallback<Result> callback;
 
     public BleScanConfig getConfig() {
         return config;
+    }
+
+    public ScanLocal(Class<Result> clz) {
+        this.clz = clz;
     }
 
     public void setConfig(BleScanConfig config) {
         this.config = config;
     }
 
-    public BaseCallback<R> getCallback() {
+
+
+    public BaseCallback<Result> getCallback() {
         return callback;
     }
 
-    public void setCallback(BaseCallback<R> callback) {
+    public Class<Result> getClz() {
+        return clz;
+    }
+
+    public void setCallback(BaseCallback<Result> callback) {
         this.callback = callback;
     }
 
-    protected R parser(ScanResult result){
+    protected Result parser(ScanResult result){
         return null;
     }
 }

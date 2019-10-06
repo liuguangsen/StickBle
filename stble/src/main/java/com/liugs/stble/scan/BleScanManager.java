@@ -4,6 +4,7 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.util.Log;
 
 import com.liugs.stble.BleManager;
+import com.liugs.stble.exception.BluetoothNotSupportException;
 
 /**
  * Created by liuguangsen on 2019/4/21.
@@ -13,7 +14,7 @@ import com.liugs.stble.BleManager;
 
 public class BleScanManager {
 
-    private final Object mLock = new Object();
+    private static final Object SCAN_LOCK = new Object();
     private BluetoothLeScanner bluetoothLeScanner;
 
     // TODO 解析系统的callback 针对不同的设置进行定制
@@ -31,43 +32,46 @@ public class BleScanManager {
     }
 
     public <Result> void startScan(ScanLocal<Result> scanLocal) {
-        BaseParser<Result> resultBaseParser = null;
+        BaseParser<Result> resultBaseParser;
         if (bluetoothLeScanner == null) {
-            synchronized (mLock) {
+            synchronized (SCAN_LOCK) {
                 if (bluetoothLeScanner == null)
                     bluetoothLeScanner = BleManager.getInstance().getBluetoothAdapter().getBluetoothLeScanner();
             }
         }
+        if (bluetoothLeScanner == null){
+            try {
+                throw new BluetoothNotSupportException("手机不支持ble扫描");
+            } catch (BluetoothNotSupportException e) {
+                return;
+            }
+        }
         resultBaseParser = ParserResultFactory.buildParser(scanLocal);
         sysScanCallback = resultBaseParser;
-        // TODO 配置扫描参数
-        Log.i("MainActivity","startScan");
-        bluetoothLeScanner.startScan(resultBaseParser);
-        // TODO 配置扫描时间的参数
-        resultBaseParser.start(scanLocal);
+        BleScanConfig config = scanLocal.getConfig();
+        if (config != null && config.getScanSettings() != null) {
+            bluetoothLeScanner.startScan(config.getBleScanFilters(), config.getScanSettings(), resultBaseParser);
+        } else {
+            Log.i("MainActivity", "startScan");
+            bluetoothLeScanner.startScan(resultBaseParser);
+        }
+        resultBaseParser.start();
     }
 
     public void stopScan() {
-        synchronized (mLock) {
-            if (sysScanCallback.isHandling()) {
+        stopSystemBleScan();
+        synchronized (SCAN_LOCK) {
+            if (sysScanCallback != null && sysScanCallback.isHandling()) {
                 sysScanCallback.stop();
             }
         }
-        stopSystemBleScan();
+
     }
 
     public void stopSystemBleScan() {
-        Log.i("MainActivity","stopSystemBleScan");
-        bluetoothLeScanner.stopScan(sysScanCallback);
-    }
-
-    // TODO 取消扫描 目前只影响是否finish的上报
-    public void cancelScan() {
-        synchronized (mLock) {
-            if (sysScanCallback.isHandling()) {
-                sysScanCallback.cancel();
-            }
+        if (sysScanCallback != null && sysScanCallback.isHandling()) {
+            Log.i("MainActivity", "stopSystemBleScan");
+            bluetoothLeScanner.stopScan(sysScanCallback);
         }
-        stopScan();
     }
 }
