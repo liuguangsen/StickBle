@@ -35,6 +35,7 @@ public class GattOperation extends BluetoothGattCallback {
 
     private volatile int currentState;
     private volatile boolean isClosed;
+    private volatile boolean isOperationDisconnect;
     private boolean hasFirstConnect;
 
     public GattOperation(Context context, String mac) {
@@ -70,8 +71,15 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_FIRST_CONNECT_START_SUCCESS;
             }
         }
+        callback(TYPE_CONNECT, currentState);
+    }
+
+    private void callback(@Type int type, @State int state) {
+        if (isOperationDisconnect || isClosed) {
+            return;
+        }
         if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_CONNECT, currentState);
+            gattOperationCallback.onOperationState(type, state);
         }
     }
 
@@ -87,9 +95,7 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_RE_CONNECT_FAILED;
             }
         }
-        if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_RE_CONNECT, currentState);
-        }
+        callback(TYPE_RE_CONNECT, currentState);
     }
 
     public void discoverService() {
@@ -104,16 +110,16 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_DISCOVER_SERVICE_FAILED;
             }
         }
-        if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_DISCOVER_SERVICE, currentState);
-        }
+        callback(TYPE_DISCOVER_SERVICE, currentState);
     }
 
 
-
-    public void disConnecct() {
+    public void disConnect() {
         if (bluetoothGatt == null) {
             return;
+        }
+        synchronized (LOCK) {
+            isOperationDisconnect = true;
         }
         bluetoothGatt.disconnect();
     }
@@ -154,10 +160,8 @@ public class GattOperation extends BluetoothGattCallback {
                 }
             }
         }
-        if (gattOperationCallback != null) {
-            int currentType = hasFirstConnect ? TYPE_RE_CONNECT : TYPE_CONNECT;
-            gattOperationCallback.onOperationState(currentType, currentState);
-        }
+        int currentType = hasFirstConnect ? TYPE_RE_CONNECT : TYPE_CONNECT;
+        callback(currentType, currentState);
     }
 
     @Override
@@ -170,9 +174,7 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_DISCOVER_SERVICE_FAILED;
             }
         }
-        if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_DISCOVER_SERVICE, currentState);
-        }
+        callback(TYPE_DISCOVER_SERVICE, currentState);
     }
 
     public void write(BluetoothGattCharacteristic characteristic) {
@@ -199,7 +201,7 @@ public class GattOperation extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        if (gattNotifyCallback != null){
+        if (gattNotifyCallback != null) {
             gattNotifyCallback.onNotifyResult(characteristic);
         }
     }
@@ -221,9 +223,7 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_SET_MTU_FAILED;
             }
         }
-        if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_SET_MTU, currentState);
-        }
+        callback(TYPE_SET_MTU, currentState);
     }
 
     @Override
@@ -236,9 +236,7 @@ public class GattOperation extends BluetoothGattCallback {
                 currentState = STATE_SET_MTU_FAILED;
             }
         }
-        if (gattOperationCallback != null) {
-            gattOperationCallback.onOperationState(TYPE_SET_MTU, currentState);
-        }
+        callback(TYPE_SET_MTU, currentState);
     }
 
     @IntDef({TYPE_CONNECT, TYPE_RE_CONNECT, TYPE_DISCOVER_SERVICE, TYPE_SET_MTU})
