@@ -1,8 +1,28 @@
 package com.liugstick.ble.lib;
 
-public class MyBleDevice {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class MyBleDevice implements Parcelable {
     private String name;
     private String mac;
+
+    protected MyBleDevice(Parcel in) {
+        name = in.readString();
+        mac = in.readString();
+    }
+
+    public static final Creator<MyBleDevice> CREATOR = new Creator<MyBleDevice>() {
+        @Override
+        public MyBleDevice createFromParcel(Parcel in) {
+            return new MyBleDevice(in);
+        }
+
+        @Override
+        public MyBleDevice[] newArray(int size) {
+            return new MyBleDevice[size];
+        }
+    };
 
     public String getName() {
         return name;
@@ -18,5 +38,16 @@ public class MyBleDevice {
 
     public void setMac(String mac) {
         this.mac = mac;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(mac);
     }
 }

@@ -27,13 +27,15 @@ public class GattOperation extends BluetoothGattCallback {
 
     private String mac;
 
+    private int mtu;
+
     private OnGattOperationCallback gattOperationCallback;
     private onGattWriteCallback gattWriteCallback;
     private onGattNotifyCallback gattNotifyCallback;
 
     private BleGattConfig gattConfig;
 
-    private volatile int currentState;
+    private volatile int currentState = STATE_UNKNOWN;
     private volatile boolean isClosed;
     private volatile boolean isOperationDisconnect;
     private boolean hasFirstConnect;
@@ -63,6 +65,7 @@ public class GattOperation extends BluetoothGattCallback {
     }
 
     public void connect(boolean asynchronous) {
+        init();
         bluetoothGatt = bluetoothDevice.connectGatt(context, asynchronous, this);
         synchronized (LOCK) {
             if (bluetoothGatt == null) {
@@ -134,10 +137,28 @@ public class GattOperation extends BluetoothGattCallback {
         }
     }
 
+    public void clearData() {
+        currentState = STATE_UNKNOWN;
+        context = null;
+        bluetoothDevice = null;
+        mac = null;
+        mtu = 0;
+        gattOperationCallback = null;
+        gattWriteCallback = null;
+        gattNotifyCallback = null;
+        gattConfig = null;
+    }
+
     public boolean isClosed() {
         return isClosed;
     }
 
+    private void init(){
+        isClosed = false;
+        isOperationDisconnect = false;
+        currentState = STATE_UNKNOWN;
+        hasFirstConnect = false;
+    }
 
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {

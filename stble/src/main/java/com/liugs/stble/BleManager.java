@@ -16,6 +16,7 @@ public class BleManager {
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
+    private Context appContext;
 
     private BleManager() {
     }
@@ -29,6 +30,7 @@ public class BleManager {
     }
 
     public void init(@NonNull Context context){
+        this.appContext = context;
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null){
             try {
@@ -53,5 +55,9 @@ public class BleManager {
 
     public BluetoothAdapter getBluetoothAdapter() {
         return bluetoothAdapter;
+    }
+
+    public Context getAppContext() {
+        return appContext;
     }
 }
