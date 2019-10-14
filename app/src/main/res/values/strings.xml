@@ -2,4 +2,5 @@
     <string name="app_name">StickBle</string>
     <string name="close">断开连接</string>
     <string name="create">建立连接</string>
+    <string name="element_text">kong de</string>
 </resources>

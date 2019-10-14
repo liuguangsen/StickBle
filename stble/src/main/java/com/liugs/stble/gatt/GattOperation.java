@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.support.annotation.IntDef;
+import android.util.Log;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -17,6 +18,8 @@ import java.lang.annotation.RetentionPolicy;
  * connect,discoverService,setMtu,read,write
  */
 public class GattOperation extends BluetoothGattCallback {
+
+    private static final String TAG = "GattOperation";
 
     private static final Object LOCK = new Object();
     private BluetoothGatt bluetoothGatt;
@@ -43,7 +46,6 @@ public class GattOperation extends BluetoothGattCallback {
     public GattOperation(Context context, String mac) {
         this.context = context;
         this.mac = mac;
-        this.bluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mac);
     }
 
     public GattOperation(Context context, BluetoothDevice bluetoothDevice) {
@@ -65,7 +67,9 @@ public class GattOperation extends BluetoothGattCallback {
     }
 
     public void connect(boolean asynchronous) {
+        Log.i(TAG,"connect");
         init();
+        bluetoothDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(mac);
         bluetoothGatt = bluetoothDevice.connectGatt(context, asynchronous, this);
         synchronized (LOCK) {
             if (bluetoothGatt == null) {
@@ -91,6 +95,7 @@ public class GattOperation extends BluetoothGattCallback {
             return;
         }
         boolean connect = bluetoothGatt.connect();
+        Log.i(TAG,"reconnect " + connect);
         synchronized (LOCK) {
             if (connect) {
                 currentState = STATE_RE_CONNECTING;
@@ -106,6 +111,7 @@ public class GattOperation extends BluetoothGattCallback {
             return;
         }
         boolean isSuccess = bluetoothGatt.discoverServices();
+        Log.i(TAG,"discoverService " + isSuccess);
         synchronized (LOCK) {
             if (isSuccess) {
                 currentState = STATE_DISCOVER_SERVICING;
@@ -124,6 +130,7 @@ public class GattOperation extends BluetoothGattCallback {
         synchronized (LOCK) {
             isOperationDisconnect = true;
         }
+        Log.i(TAG,"disConnect");
         bluetoothGatt.disconnect();
     }
 
@@ -131,6 +138,7 @@ public class GattOperation extends BluetoothGattCallback {
         if (bluetoothGatt == null) {
             return;
         }
+        Log.i(TAG,"close");
         bluetoothGatt.close();
         synchronized (LOCK) {
             isClosed = true;
@@ -153,7 +161,7 @@ public class GattOperation extends BluetoothGattCallback {
         return isClosed;
     }
 
-    private void init(){
+    private void init() {
         isClosed = false;
         isOperationDisconnect = false;
         currentState = STATE_UNKNOWN;
@@ -162,31 +170,37 @@ public class GattOperation extends BluetoothGattCallback {
 
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        Log.i(TAG, "onConnectionStateChange " + status + " " + newState);
+        int currentType;
         synchronized (LOCK) {
             // connect操作成功
             if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
                 // 第一次建立gatt成功
                 if (!hasFirstConnect) {
+                    currentType = TYPE_CONNECT;
                     hasFirstConnect = true;
                     currentState = STATE_FIRST_CONNECT_SUCCESS;
                 } else {
+                    currentType = TYPE_RE_CONNECT;
                     currentState = STATE_CONNECT_SUCCESS;
                 }
             } else {
                 // 参照源码BluetoothProfile.STATE_DISCONNECTED，统统认为connect操作失败
                 if (!hasFirstConnect) {
+                    currentType = TYPE_CONNECT;
                     currentState = STATE_FIRST_CONNECT_FAILED;
                 } else {
+                    currentType = TYPE_RE_CONNECT;
                     currentState = STATE_CONNECT_FAILED;
                 }
             }
         }
-        int currentType = hasFirstConnect ? TYPE_RE_CONNECT : TYPE_CONNECT;
         callback(currentType, currentState);
     }
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        Log.i(TAG, "onServicesDiscovered " + status);
         synchronized (LOCK) {
             // connect操作成功
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -215,6 +229,7 @@ public class GattOperation extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        Log.i(TAG, "onCharacteristicWrite " + status);
         if (gattWriteCallback != null) {
             gattWriteCallback.onWriteResult(status == BluetoothGatt.GATT_SUCCESS);
         }
@@ -222,6 +237,7 @@ public class GattOperation extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+        Log.i(TAG, "onCharacteristicChanged ");
         if (gattNotifyCallback != null) {
             gattNotifyCallback.onNotifyResult(characteristic);
         }
@@ -237,6 +253,7 @@ public class GattOperation extends BluetoothGattCallback {
             return;
         }
         boolean isSuccess = bluetoothGatt.requestMtu(mtu);
+        Log.i(TAG,"setMtu " + isSuccess);
         synchronized (LOCK) {
             if (isSuccess) {
                 currentState = STATE_SET_MUTING;
@@ -249,6 +266,7 @@ public class GattOperation extends BluetoothGattCallback {
 
     @Override
     public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+        Log.i(TAG, "onMtuChanged " + status);
         synchronized (LOCK) {
             // connect操作成功
             if (status == BluetoothGatt.GATT_SUCCESS) {

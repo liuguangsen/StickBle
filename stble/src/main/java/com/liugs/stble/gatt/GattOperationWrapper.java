@@ -3,6 +3,7 @@ package com.liugs.stble.gatt;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 
 import com.liugs.stble.gatt.callback.UiGattCallback;
@@ -28,13 +29,13 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     public GattOperationWrapper(Context context, BluetoothDevice device) {
         operation = new GattOperation(context, device);
         operation.setGattOperationCallback(this);
-        handler = new GattHandler(this);
+        handler = new GattHandler(Looper.getMainLooper(), this);
     }
 
     public GattOperationWrapper(Context context, String mac) {
         operation = new GattOperation(context, mac);
         operation.setGattOperationCallback(this);
-        handler = new GattHandler(this);
+        handler = new GattHandler(Looper.getMainLooper(), this);
     }
 
     public void setUiGattCallback(UiGattCallback uiGattCallback) {
@@ -46,6 +47,17 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     }
 
     public void createGattChannel() {
+        if (!GattOerationUtil.checkBluetoothAddress(config.getMac())) {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (uiGattCallback != null) {
+                        uiGattCallback.onError(config.getMac() + " is not a valid Bluetooth address");
+                    }
+                }
+            });
+            return;
+        }
         operation.connect(false);
     }
 
@@ -97,9 +109,9 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
             case GattOperation.STATE_DISCOVER_SERVICE_FAILED:
                 break;
             case GattOperation.STATE_DISCOVER_SERVICE_SUCCESS:
-                if (config.isSetMtu()){
-                    handler.sendEmptyMessageDelayed(MSG_SET_MTU,config.getSetMtuDelayTime());
-                }else {
+                if (config.isSetMtu()) {
+                    handler.sendEmptyMessageDelayed(MSG_SET_MTU, config.getSetMtuDelayTime());
+                } else {
                     callCreateChannel();
                 }
                 break;
@@ -121,10 +133,10 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
                 break;
             case GattOperation.STATE_FIRST_CONNECT_SUCCESS:
                 // 建立链路成功了哦
-                if (config.isDiscoverService()){
-                    handler.sendEmptyMessageDelayed(MSG_DISCOVER_SERVICE,config.getDiscoverDelayTime());
-                }else if (config.isSetMtu()){
-                    handler.sendEmptyMessageDelayed(MSG_SET_MTU,config.getSetMtuDelayTime());
+                if (config.isDiscoverService()) {
+                    handler.sendEmptyMessageDelayed(MSG_DISCOVER_SERVICE, config.getDiscoverDelayTime());
+                } else if (config.isSetMtu()) {
+                    handler.sendEmptyMessageDelayed(MSG_SET_MTU, config.getSetMtuDelayTime());
                 } else {
                     callCreateChannel();
                 }
@@ -136,9 +148,14 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     }
 
     private void callCreateChannel() {
-        if (uiGattCallback != null){
-            uiGattCallback.onCreateChannelResult(true);
-        }
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (uiGattCallback != null) {
+                    uiGattCallback.onCreateChannelResult(true);
+                }
+            }
+        });
     }
 
     private static final int MSG_FIRST_CONNECT = 1001;
@@ -150,7 +167,8 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     private static class GattHandler extends Handler {
         private WeakReference<GattOperationWrapper> reference;
 
-        public GattHandler(GattOperationWrapper operation) {
+        public GattHandler(Looper looper, GattOperationWrapper operation) {
+            super(looper);
             this.reference = new WeakReference<>(operation);
         }
 

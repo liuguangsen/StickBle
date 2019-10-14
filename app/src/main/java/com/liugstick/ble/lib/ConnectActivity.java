@@ -57,4 +57,10 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
         builder.append(tv).append("\n");
         textView.setText(builder.toString());
     }
+
+    @Override
+    public void onBackPressed() {
+        GattChannelManager.getInstance().closeGatt(mac);
+        super.onBackPressed();
+    }
 }

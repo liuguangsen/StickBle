@@ -7,6 +7,9 @@ public class MyBleDevice implements Parcelable {
     private String name;
     private String mac;
 
+    public MyBleDevice() {
+    }
+
     protected MyBleDevice(Parcel in) {
         name = in.readString();
         mac = in.readString();

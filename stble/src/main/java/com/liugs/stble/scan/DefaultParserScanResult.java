@@ -7,6 +7,7 @@ import android.util.Log;
 import com.liugs.stble.exception.ParamException;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by liuguangsen on 2019/4/21.
@@ -14,6 +15,7 @@ import java.util.List;
  */
 public class DefaultParserScanResult<Result> extends BaseParser<Result> {
     private Handler mainHandler = new Handler();
+    private ConcurrentHashMap<String,ScanResult> list = new ConcurrentHashMap<>();
     private BleScanCallback<Result> callback;
 
     public DefaultParserScanResult() {
@@ -24,6 +26,12 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
         super.onScanResult(callbackType, result);
         Log.i("MainActivity", "onScanResult");
         if (result != null && callback != null && isHandling()) {
+            String address = result.getDevice().getAddress();
+            if (list.containsKey(address)){
+                return;
+            }else {
+                list.put(address,result);
+            }
             Result parser = scanLocal.parser(result);
             if (parser != null) {
                 callback.onScanResult(parser);
@@ -51,6 +59,7 @@ public class DefaultParserScanResult<Result> extends BaseParser<Result> {
     public void start() {
         super.start();
         Log.i("MainActivity", "start");
+        list.clear();
         callback = (BleScanCallback<Result>) scanLocal.getCallback();
         BleScanConfig config = scanLocal.getConfig();
         mainHandler.postDelayed(new Runnable() {

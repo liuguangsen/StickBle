@@ -21,19 +21,27 @@ public class GattChannelManager {
     }
 
     private GattChannelMap<String, GattOperationWrapper> deviceList = new GattChannelMap<>();
-    private LinkedHashMap<String, BaseUiCallback>uiCallback = new LinkedHashMap<>();
+    private LinkedHashMap<String, BaseUiCallback> uiCallback = new LinkedHashMap<>();
 
     public void startGatt(GattConfig config, UiGattCallback callback) {
         String mac = config.getMac();
-        GattOperationWrapper wrapper = GattChannelFactory.createWraper(BleManager.getInstance().getAppContext(), mac);
+        GattOperationWrapper wrapper = deviceList.get(mac);
+        if (wrapper != null) {
+            return;
+        }
+        wrapper = GattChannelFactory.createWrapper(BleManager.getInstance().getAppContext(), mac);
         wrapper.setUiGattCallback(callback);
         wrapper.setConfig(config);
         deviceList.put(mac, wrapper);
-        uiCallback.put(mac,callback);
+        uiCallback.put(mac, callback);
         wrapper.createGattChannel();
     }
 
     public void closeGatt(String mac) {
+        GattOperationWrapper wrapper = deviceList.get(mac);
+        if (wrapper != null) {
+            wrapper.closeGattChannel();
+        }
         deviceList.remove(mac);
         uiCallback.remove(mac);
     }

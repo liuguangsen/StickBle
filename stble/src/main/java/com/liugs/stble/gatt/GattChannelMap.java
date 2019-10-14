@@ -10,11 +10,12 @@ public class GattChannelMap<K, V>  extends LinkedHashMap<K, V> {
     }
 
     @Override
-    public boolean remove(Object key, Object value) {
+    protected boolean removeEldestEntry(Entry<K, V> eldest) {
+        V value = eldest.getValue();
         if (value instanceof GattOperationWrapper){
             GattOperationWrapper wrapper = (GattOperationWrapper) value;
             wrapper.closeGattChannel();
         }
-        return super.remove(key, value);
+        return super.removeEldestEntry(eldest);
     }
 }
