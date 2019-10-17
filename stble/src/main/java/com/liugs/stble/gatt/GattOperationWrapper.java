@@ -13,6 +13,8 @@ import java.lang.ref.WeakReference;
 /**
  * gatt链路,辅助gatt链路的核心类
  * 1.connect,discoverService(可选),setMtu(可选)
+ * 缺陷：只能控制client主动操作， server的操作待优化，目前的优化点上，给建立链路设置合适的总超时时间进行close操作
+ * 这个操作待查看源码，初步想法上再来一层GattOperationController
  */
 public class GattOperationWrapper extends BaseOperationWraper implements OnGattOperationCallback {
     // gatt操作
@@ -62,6 +64,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     }
 
     public void closeGattChannel() {
+        handler.removeCallbacksAndMessages(null);
         operation.disConnect();
         operation.close();
         operation.clearData();
@@ -84,6 +87,26 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
                 handleSetMtu(state);
                 break;
             case GattOperation.TYPE_RE_CONNECT:
+                handleReConnectType(state);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void handleReConnectType(int state) {
+        switch (state) {
+            case GattOperation.STATE_RE_CONNECT_FAILED:
+                handler.sendEmptyMessageDelayed(MSG_RE_CONNECT, config.getConnectDelayTime());
+                break;
+            case GattOperation.STATE_RE_CONNECTING:
+                // 重连操作成功，等待结果
+                break;
+            case GattOperation.STATE_CONNECT_SUCCESS:
+                // 重连成功
+                break;
+            case GattOperation.STATE_CONNECT_FAILED:
+                handler.sendEmptyMessageDelayed(MSG_RE_CONNECT, config.getConnectDelayTime());
                 break;
             default:
                 break;
@@ -93,11 +116,13 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     private void handleSetMtu(int state) {
         switch (state) {
             case GattOperation.STATE_SET_MTU_FAILED:
+                handler.sendEmptyMessageDelayed(MSG_SET_MTU, config.getSetMtuDelayTime());
                 break;
             case GattOperation.STATE_SET_MTU_SUCCESS:
                 callCreateChannel();
                 break;
             case GattOperation.STATE_SET_MUTING:
+                // 设置mtu操作成功，等待结果
                 break;
             default:
                 break;
@@ -107,6 +132,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     private void handleDiscoverService(int state) {
         switch (state) {
             case GattOperation.STATE_DISCOVER_SERVICE_FAILED:
+                handler.sendEmptyMessageDelayed(MSG_DISCOVER_SERVICE, config.getDiscoverDelayTime());
                 break;
             case GattOperation.STATE_DISCOVER_SERVICE_SUCCESS:
                 if (config.isSetMtu()) {
@@ -116,6 +142,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
                 }
                 break;
             case GattOperation.STATE_DISCOVER_SERVICING:
+                // discoverService成功，等待结果
                 break;
             default:
                 break;
@@ -130,6 +157,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
                 break;
             case GattOperation.STATE_FIRST_CONNECT_START_FAILED:
                 // 第一次建立连接异常
+                handler.sendEmptyMessageDelayed(MSG_FIRST_CONNECT, config.getConnectDelayTime());
                 break;
             case GattOperation.STATE_FIRST_CONNECT_SUCCESS:
                 // 建立链路成功了哦
@@ -143,6 +171,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
                 break;
             case GattOperation.STATE_FIRST_CONNECT_FAILED:
                 // 建立链路失败了哦
+                handler.sendEmptyMessageDelayed(MSG_RE_CONNECT, config.getConnectDelayTime());
                 break;
         }
     }

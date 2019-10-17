@@ -16,6 +16,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * 封装Gatt操作api
  * connect,discoverService,setMtu,read,write
+ * 缺点：针对一些细节的错误码，没有识别
  */
 public class GattOperation extends BluetoothGattCallback {
 

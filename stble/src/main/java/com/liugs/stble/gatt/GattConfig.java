@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 public class GattConfig extends BaseConfig {
     private int mtu;
     private boolean setMtu;
+    private long connectDelayTime;
     private long setMtuDelayTime;
     private boolean discoverService;
     private long discoverDelayTime;
@@ -40,6 +41,14 @@ public class GattConfig extends BaseConfig {
 
     public long getSetMtuDelayTime() {
         return setMtuDelayTime;
+    }
+
+    public long getConnectDelayTime() {
+        return connectDelayTime;
+    }
+
+    public void setConnectDelayTime(long connectDelayTime) {
+        this.connectDelayTime = connectDelayTime;
     }
 
     public boolean isDiscoverService() {
