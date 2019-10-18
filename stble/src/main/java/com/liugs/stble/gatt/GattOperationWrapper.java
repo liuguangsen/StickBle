@@ -1,6 +1,7 @@
 package com.liugs.stble.gatt;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -23,6 +24,8 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     private GattHandler handler;
     // gat写入
     private GattWriteTask gattWriteTask;
+
+    private BluetoothGattCharacteristic characteristic;
 
     private GattConfig config;
 
@@ -72,6 +75,11 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
 
     private void setMtu() {
         operation.setMtu(config.getMtu());
+    }
+
+    public void write(byte[] src){
+        characteristic.setValue(src);
+        operation.write(characteristic);
     }
 
     @Override

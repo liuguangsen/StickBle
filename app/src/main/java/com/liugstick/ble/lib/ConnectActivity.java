@@ -29,9 +29,8 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
     }
 
     public void startConnect(View view) {
-        GattConfig config = new GattConfig(mac);
-        config.setMtu(true,180,500);
-        GattChannelManager.getInstance().startGatt(config,this);
+        GattConfig config = new GattConfig.Builder(mac).setConnectDelayTime(500).setMtu(true, 180, 500).build();
+        GattChannelManager.getInstance().startGatt(config, this);
     }
 
     public void closeConnect(View view) {
@@ -53,7 +52,7 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
         addTv(error);
     }
 
-    private void addTv(String tv){
+    private void addTv(String tv) {
         builder.append(tv).append("\n");
         textView.setText(builder.toString());
     }
