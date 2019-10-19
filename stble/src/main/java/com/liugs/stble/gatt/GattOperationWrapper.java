@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.liugs.stble.gatt.callback.ControllerCallback;
 import com.liugs.stble.gatt.callback.UiGattCallback;
 
 import java.lang.ref.WeakReference;
@@ -17,7 +18,7 @@ import java.lang.ref.WeakReference;
  * 缺陷：只能控制client主动操作， server的操作待优化，目前的优化点上，给建立链路设置合适的总超时时间进行close操作
  * 这个操作待查看源码，初步想法上再来一层GattOperationController
  */
-public class GattOperationWrapper extends BaseOperationWraper implements OnGattOperationCallback {
+public class GattOperationWrapper  implements BaseOperationWrapper , OnGattOperationCallback {
     // gatt操作
     private GattOperation operation;
     // gatt连路管理
@@ -30,6 +31,8 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
     private GattConfig config;
 
     private UiGattCallback uiGattCallback;
+
+    private ControllerCallback controllerCallback;
 
     public GattOperationWrapper(Context context, BluetoothDevice device) {
         operation = new GattOperation(context, device);
@@ -47,10 +50,20 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
         this.uiGattCallback = uiGattCallback;
     }
 
+    public void setControllerCallback(ControllerCallback controllerCallback) {
+        this.controllerCallback = controllerCallback;
+    }
+
     public void setConfig(GattConfig config) {
         this.config = config;
     }
 
+    @Override
+    public String getMac() {
+        return config.getMac();
+    }
+
+    @Override
     public void createGattChannel() {
         if (!GattOerationUtil.checkBluetoothAddress(config.getMac())) {
             handler.post(new Runnable() {
@@ -66,6 +79,7 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
         operation.connect(false);
     }
 
+    @Override
     public void closeGattChannel() {
         handler.removeCallbacksAndMessages(null);
         operation.disConnect();
@@ -157,8 +171,8 @@ public class GattOperationWrapper extends BaseOperationWraper implements OnGattO
         }
     }
 
-    @Override
-    protected void handleConnectType(int state) {
+    public void handleConnectType(int state) {
+        controllerCallback.onState(state);
         switch (state) {
             case GattOperation.STATE_FIRST_CONNECT_START_SUCCESS:
                 // 第一次建立连接正常，等待建立成功

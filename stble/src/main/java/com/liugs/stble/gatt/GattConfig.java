@@ -1,6 +1,9 @@
 package com.liugs.stble.gatt;
 
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.support.annotation.NonNull;
+
+import java.util.UUID;
 
 public class GattConfig extends BaseConfig {
     private int mtu;
@@ -9,6 +12,8 @@ public class GattConfig extends BaseConfig {
     private long setMtuDelayTime;
     private boolean discoverService;
     private long discoverDelayTime;
+    private UUID writeCharacterUUID;
+    private UUID notifyCharacterUUID;
 
     @NonNull
     private String mac;
@@ -59,9 +64,11 @@ public class GattConfig extends BaseConfig {
         return discoverDelayTime;
     }
 
-    public void setDiscoverService(boolean discoverService, long discoverDelayTime) {
+    public void setDiscoverService(boolean discoverService, long discoverDelayTime,UUID writeCharacterUUID,UUID notifyCharacterUUID) {
         this.discoverService = discoverService;
         this.discoverDelayTime = discoverDelayTime;
+        this.writeCharacterUUID = writeCharacterUUID;
+        this.notifyCharacterUUID = notifyCharacterUUID;
     }
 
     public static class Builder{
@@ -72,6 +79,8 @@ public class GattConfig extends BaseConfig {
         private long setMtuDelayTime;
         private boolean discoverService;
         private long discoverDelayTime;
+        private UUID writeCharacterUUID;
+        private UUID notifyCharacterUUID;
 
         @NonNull
         private String mac;
@@ -127,10 +136,12 @@ public class GattConfig extends BaseConfig {
             return discoverDelayTime;
         }
 
-        public Builder setDiscoverService(boolean discoverService, long discoverDelayTime) {
+        public Builder setDiscoverService(boolean discoverService, long discoverDelayTime,UUID writeCharacterUUID,UUID notifyCharacterUUID) {
             this.discoverService = discoverService;
             this.discoverDelayTime = discoverDelayTime;
-            config.setDiscoverService(discoverService,discoverDelayTime);
+            this.writeCharacterUUID = writeCharacterUUID;
+            this.notifyCharacterUUID = notifyCharacterUUID;
+            config.setDiscoverService(discoverService,discoverDelayTime,writeCharacterUUID,notifyCharacterUUID);
             return this;
         }
 
