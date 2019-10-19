@@ -12,7 +12,8 @@
    BleManager.getInstance().init(getApplicationContext());
    
 扫描功能：
-        1.创建扫描工具
+       
+       1.创建扫描工具
         (1)使用系统扫描实体类
            ScanLocal<ScanResult> scanLocal = new ScanLocal<>(ScanResult.class);
         (2)支持自定义单个设备解析实体类
