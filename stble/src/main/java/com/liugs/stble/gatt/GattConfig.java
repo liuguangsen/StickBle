@@ -11,7 +11,9 @@ public class GattConfig extends BaseConfig {
     private long connectDelayTime;
     private long setMtuDelayTime;
     private boolean discoverService;
+    private boolean isRetry;
     private long discoverDelayTime;
+    private UUID serviceUUID;
     private UUID writeCharacterUUID;
     private UUID notifyCharacterUUID;
 
@@ -38,7 +40,7 @@ public class GattConfig extends BaseConfig {
         return setMtu;
     }
 
-    public void setMtu(boolean setMtu, int mtu,long setMtuDelayTime) {
+    public void setMtu(boolean setMtu, int mtu, long setMtuDelayTime) {
         this.setMtu = setMtu;
         this.mtu = mtu;
         this.setMtuDelayTime = setMtuDelayTime;
@@ -64,21 +66,41 @@ public class GattConfig extends BaseConfig {
         return discoverDelayTime;
     }
 
-    public void setDiscoverService(boolean discoverService, long discoverDelayTime,UUID writeCharacterUUID,UUID notifyCharacterUUID) {
+    public void setDiscoverService(boolean discoverService, boolean isRetry, long discoverDelayTime, UUID serviceUUID, UUID writeCharacterUUID, UUID notifyCharacterUUID) {
         this.discoverService = discoverService;
+        this.isRetry = isRetry;
         this.discoverDelayTime = discoverDelayTime;
+        this.serviceUUID = serviceUUID;
         this.writeCharacterUUID = writeCharacterUUID;
         this.notifyCharacterUUID = notifyCharacterUUID;
     }
 
-    public static class Builder{
+    public boolean isRetry() {
+        return isRetry;
+    }
+
+    public UUID getServiceUUID() {
+        return serviceUUID;
+    }
+
+    public UUID getWriteCharacterUUID() {
+        return writeCharacterUUID;
+    }
+
+    public UUID getNotifyCharacterUUID() {
+        return notifyCharacterUUID;
+    }
+
+    public static class Builder {
         private GattConfig config;
         private int mtu;
         private boolean setMtu;
         private long connectDelayTime;
         private long setMtuDelayTime;
         private boolean discoverService;
+        private boolean isRetry;
         private long discoverDelayTime;
+        private UUID serviceUUID;
         private UUID writeCharacterUUID;
         private UUID notifyCharacterUUID;
 
@@ -106,11 +128,11 @@ public class GattConfig extends BaseConfig {
             return setMtu;
         }
 
-        public Builder setMtu(boolean setMtu, int mtu,long setMtuDelayTime) {
+        public Builder setMtu(boolean setMtu, int mtu, long setMtuDelayTime) {
             this.setMtu = setMtu;
             this.mtu = mtu;
             this.setMtuDelayTime = setMtuDelayTime;
-            config.setMtu(setMtu,mtu,setMtuDelayTime);
+            config.setMtu(setMtu, mtu, setMtuDelayTime);
             return this;
         }
 
@@ -136,16 +158,18 @@ public class GattConfig extends BaseConfig {
             return discoverDelayTime;
         }
 
-        public Builder setDiscoverService(boolean discoverService, long discoverDelayTime,UUID writeCharacterUUID,UUID notifyCharacterUUID) {
+        public Builder setDiscoverService(boolean discoverService, boolean isRetry, long discoverDelayTime, UUID serviceUUID, UUID writeCharacterUUID, UUID notifyCharacterUUID) {
             this.discoverService = discoverService;
+            this.isRetry = isRetry;
             this.discoverDelayTime = discoverDelayTime;
+            this.serviceUUID = serviceUUID;
             this.writeCharacterUUID = writeCharacterUUID;
             this.notifyCharacterUUID = notifyCharacterUUID;
-            config.setDiscoverService(discoverService,discoverDelayTime,writeCharacterUUID,notifyCharacterUUID);
+            config.setDiscoverService(discoverService, isRetry, discoverDelayTime, serviceUUID, writeCharacterUUID, notifyCharacterUUID);
             return this;
         }
 
-        public GattConfig build(){
+        public GattConfig build() {
             return config;
         }
     }

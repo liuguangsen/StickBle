@@ -2,6 +2,7 @@ package com.liugs.stble.gatt;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
@@ -11,6 +12,7 @@ import com.liugs.stble.gatt.callback.ControllerCallback;
 import com.liugs.stble.gatt.callback.UiGattCallback;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 /**
  * gatt链路,辅助gatt链路的核心类
@@ -27,6 +29,8 @@ public class GattOperationWrapper  implements BaseOperationWrapper , OnGattOpera
     private GattWriteTask gattWriteTask;
 
     private BluetoothGattCharacteristic characteristic;
+
+    private volatile boolean isStopWrited;
 
     private GattConfig config;
 
@@ -87,13 +91,32 @@ public class GattOperationWrapper  implements BaseOperationWrapper , OnGattOpera
         operation.clearData();
     }
 
-    private void setMtu() {
-        operation.setMtu(config.getMtu());
+    @Override
+    public void createWriteTask() {
+        gattWriteTask = new GattWriteTask(this);
+        gattWriteTask.start();
     }
 
+    @Override
     public void write(byte[] src){
         characteristic.setValue(src);
         operation.write(characteristic);
+    }
+
+    @Override
+    public void writeBackground(byte[] src) {
+        if (isStopWrited){
+            return;
+        }
+        if (gattWriteTask == null){
+            createWriteTask();
+        }
+        gattWriteTask.addWriteData(src);
+    }
+
+    @Override
+    public void stopWrite() {
+        gattWriteTask.stopWriteTask();
     }
 
     @Override
@@ -114,6 +137,10 @@ public class GattOperationWrapper  implements BaseOperationWrapper , OnGattOpera
             default:
                 break;
         }
+    }
+
+    private void setMtu() {
+        operation.setMtu(config.getMtu());
     }
 
     private void handleReConnectType(int state) {
@@ -157,6 +184,14 @@ public class GattOperationWrapper  implements BaseOperationWrapper , OnGattOpera
                 handler.sendEmptyMessageDelayed(MSG_DISCOVER_SERVICE, config.getDiscoverDelayTime());
                 break;
             case GattOperation.STATE_DISCOVER_SERVICE_SUCCESS:
+                BluetoothGattService service = operation.getGatt().getService(config.getServiceUUID());
+                if (service != null){
+                    characteristic = service.getCharacteristic(config.getWriteCharacterUUID());
+                }
+                if (characteristic == null && config.isRetry()){
+                    handler.sendEmptyMessageDelayed(MSG_DISCOVER_SERVICE, config.getDiscoverDelayTime());
+                    return;
+                }
                 if (config.isSetMtu()) {
                     handler.sendEmptyMessageDelayed(MSG_SET_MTU, config.getSetMtuDelayTime());
                 } else {

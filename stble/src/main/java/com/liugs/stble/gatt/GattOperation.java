@@ -279,6 +279,10 @@ public class GattOperation extends BluetoothGattCallback {
         callback(TYPE_SET_MTU, currentState);
     }
 
+    public BluetoothGatt getGatt() {
+        return bluetoothGatt;
+    }
+
     @IntDef({TYPE_CONNECT, TYPE_RE_CONNECT, TYPE_DISCOVER_SERVICE, TYPE_SET_MTU})
     @Retention(RetentionPolicy.SOURCE)
     public @interface Type {

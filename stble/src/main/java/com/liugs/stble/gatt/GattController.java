@@ -12,7 +12,6 @@ import com.liugs.stble.gatt.callback.UiGattCallback;
  */
 public class GattController implements ControllerCallback, BaseOperationWrapper {
     private GattOperationWrapper wrapper;
-    private GattWriteTask writeTask;
 
     public GattController(Context context, String mac) {
         wrapper = new GattOperationWrapper(context, mac);
@@ -26,9 +25,7 @@ public class GattController implements ControllerCallback, BaseOperationWrapper 
 
     @Override
     public void onState(int state) {
-        if (writeTask != null) {
-            writeTask.setState(state);
-        }
+
     }
 
     @Override
@@ -56,14 +53,27 @@ public class GattController implements ControllerCallback, BaseOperationWrapper 
         wrapper.setUiGattCallback(callback);
     }
 
-    public void createWriteTask(byte[] src) {
-        writeTask = new GattWriteTask(wrapper);
-        writeTask.start();
+    @Override
+    public void createWriteTask() {
+        wrapper.createWriteTask();
     }
 
-    public void closeWriteTask() {
-        if (writeTask != null) {
-            writeTask.stopWriteTask();
-        }
+    @Override
+    public void write(byte[] src) {
+        wrapper.write(src);
+    }
+
+    @Override
+    public void writeBackground(byte[] src) {
+        wrapper.writeBackground(src);
+    }
+
+    @Override
+    public void stopWrite() {
+        wrapper.stopWrite();
+    }
+
+    public GattOperationWrapper getWrapper() {
+        return wrapper;
     }
 }

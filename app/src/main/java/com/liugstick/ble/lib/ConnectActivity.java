@@ -10,6 +10,8 @@ import com.liugs.stble.gatt.GattChannelManager;
 import com.liugs.stble.gatt.GattConfig;
 import com.liugs.stble.gatt.callback.UiGattCallback;
 
+import java.util.UUID;
+
 public class ConnectActivity extends AppCompatActivity implements UiGattCallback {
 
     private String mac;
@@ -29,7 +31,11 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
     }
 
     public void startConnect(View view) {
-        GattConfig config = new GattConfig.Builder(mac).setConnectDelayTime(500).setMtu(true, 180, 500).build();
+        GattConfig config = new GattConfig.Builder(mac)
+                .setConnectDelayTime(500)
+                .setDiscoverService(true,500, UUID.fromString("00001503-1212-EFDF-1523-785FEABCD123"),null)
+                .setMtu(true, 180, 500)
+                .build();
         GattChannelManager.getInstance().startGatt(config, this);
     }
 
@@ -61,5 +67,11 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
     public void onBackPressed() {
         GattChannelManager.getInstance().closeGatt(mac);
         super.onBackPressed();
+    }
+
+    public void writeBackground(View view) {
+        for (int i = 0; i < 100; i++) {
+            GattChannelManager.getInstance().write(mac, "ABCDEFG1234567890".getBytes());
+        }
     }
 }

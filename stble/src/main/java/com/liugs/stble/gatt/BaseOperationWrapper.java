@@ -13,4 +13,12 @@ public interface BaseOperationWrapper {
     void closeGattChannel();
 
    void setUiGattCallback(UiGattCallback callback);
+
+   void createWriteTask();
+
+   void write(byte[] src);
+
+   void writeBackground(byte[] src);
+
+   void stopWrite();
 }

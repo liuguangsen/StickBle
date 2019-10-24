@@ -1,5 +1,7 @@
 package com.liugs.stble.gatt;
 
+import android.text.TextUtils;
+
 import com.liugs.stble.BleManager;
 import com.liugs.stble.gatt.callback.BaseUiCallback;
 import com.liugs.stble.gatt.callback.UiGattCallback;
@@ -75,6 +77,26 @@ public class GattChannelManager {
         Iterator<Map.Entry<String, BaseUiCallback>> UiIterator = uiCallback.entrySet().iterator();
         while (iterator.hasNext()) {
             UiIterator.remove();
+        }
+    }
+
+    public void write(String mac, byte[] src) {
+        if (TextUtils.isEmpty(mac)) {
+            return;
+        }
+        GattController gattController = deviceList.get(mac);
+        if (gattController != null) {
+            gattController.writeBackground(src);
+        }
+    }
+
+    public void stopWrite(String mac){
+        if (TextUtils.isEmpty(mac)) {
+            return;
+        }
+        GattController gattController = deviceList.get(mac);
+        if (gattController != null) {
+            gattController.stopWrite();
         }
     }
 }
