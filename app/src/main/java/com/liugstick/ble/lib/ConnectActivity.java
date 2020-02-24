@@ -33,7 +33,11 @@ public class ConnectActivity extends AppCompatActivity implements UiGattCallback
     public void startConnect(View view) {
         GattConfig config = new GattConfig.Builder(mac)
                 .setConnectDelayTime(500)
-                .setDiscoverService(true,500, UUID.fromString("00001503-1212-EFDF-1523-785FEABCD123"),null)
+                .setDiscoverService(true, true,
+                        500,
+                        UUID.fromString("00001503-1212-EFDF-1523-785FEABCD123"),
+                        null,
+                        null)
                 .setMtu(true, 180, 500)
                 .build();
         GattChannelManager.getInstance().startGatt(config, this);
